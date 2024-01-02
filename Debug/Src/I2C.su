@@ -1,0 +1,8 @@
+../Src/I2C.c:43:6:i2c_activate_pb89	24	static
+../Src/I2C.c:80:10:convDecByteToHex	24	static
+../Src/I2C.c:111:8:LIS3DH_init	16	static
+../Src/I2C.c:124:9:LIS3DH_XYZ	32	static
+../Src/I2C.c:142:9:LIS3DH_Temp	32	static
+../Src/I2C.c:152:6:RFID_LED	16	static
+../Src/I2C.c:164:8:RFID_readCard	40	static
+../Src/I2C.c:216:8:RFID_readFWVersion	40	static
