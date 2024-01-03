@@ -1,8 +1,9 @@
-I2C.c:43:6:i2c_activate_pb89	1
+I2C.c:48:6:i2c_activate_pb89	1
 I2C.c:80:10:convDecByteToHex	3
-I2C.c:111:8:LIS3DH_init	1
-I2C.c:124:9:LIS3DH_XYZ	1
-I2C.c:142:9:LIS3DH_Temp	1
-I2C.c:152:6:RFID_LED	2
-I2C.c:164:8:RFID_readCard	7
-I2C.c:216:8:RFID_readFWVersion	6
+I2C.c:111:8:i2cLIS3DH_presCheck	2
+I2C.c:125:8:i2cLIS3DH_init	11
+I2C.c:203:9:i2cLIS3DH_XYZ	1
+I2C.c:227:8:i2cLIS3DH_Temp	1
+I2C.c:236:6:RFID_LED	2
+I2C.c:248:8:RFID_readCard	7
+I2C.c:300:8:RFID_readFWVersion	6

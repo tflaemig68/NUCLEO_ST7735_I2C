@@ -1,0 +1,6 @@
+hw_config.c:16:6:delay_ms	1
+hw_config.c:26:6:lcd7735_senddata	1
+hw_config.c:33:6:lcd7735_senddata16	1
+hw_config.c:39:6:lcd7735_sendCmd	1
+hw_config.c:46:6:lcd7735_sendData	1
+hw_config.c:53:6:lcd7735_setup	1

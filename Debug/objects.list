@@ -6,4 +6,5 @@
 "./Src/syscalls.o"
 "./Src/sysmem.o"
 "./Src/system_stm32f4xx.o"
+"./Src/xyzScope.o"
 "./Startup/startup_stm32f401retx.o"

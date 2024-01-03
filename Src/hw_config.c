@@ -93,7 +93,7 @@ void lcd7735_setup(void)
     // Init SPI1
     spiSelectSPI(spi);
 
-    spiInitSPI(spi, CLK_DIV_16, DATA_FORMAT_8, SSM_ON, SSI_LVL_HIGH, MASTER, SPI_PHASE_EDGE_1, SPI_IDLE_LOW);
+    spiInitSPI(spi, CLK_DIV_16, SPI_DATA_8_BIT, SSM_ON, SSI_LVL_HIGH, MASTER, SPI_PHASE_EDGE_1, SPI_IDLE_LOW);
 
 }
 

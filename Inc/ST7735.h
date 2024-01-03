@@ -75,13 +75,14 @@
 
 // 5-6-5 bits colors samples 
 #define	ST7735_BLACK   0x0000
-#define	ST7735_BLUE    0x001F
-#define	ST7735_RED     0xF800
+#define	ST7735_BLUE    0x001F  //0000 0000 0001 1111
+#define	ST7735_RED     0xF800  //1111 1000 0000 0000
 #define	ST7735_GREEN   0x07E0
 #define ST7735_CYAN    0x07FF
 #define ST7735_MAGENTA 0xF81F
 #define ST7735_YELLOW  0xFFE0  
 #define ST7735_WHITE   0xFFFF
+#define ST7735_GREY    0b0001100100100011
 
 #define INVERT_ON		1
 #define INVERT_OFF		0

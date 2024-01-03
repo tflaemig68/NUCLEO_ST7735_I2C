@@ -362,7 +362,7 @@ void lcd7735_drawFastLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16
 			else { y=y1-mdy*(x-x1)/mdx; }
 			lcd7735_drawPixel(x,y,color);
 			x=x+sx;
-			l--;
+			l-=2;
 		}
 	} else {
 		l=mdy;
@@ -371,7 +371,7 @@ void lcd7735_drawFastLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16
 			else { x=x1+((mdx*(y1-y))/mdy); }
 			lcd7735_drawPixel(x,y,color);
 			y=y+sy;
-			l--;
+			l-=2;
 		}
 	}
 	lcd7735_drawPixel(x2, y2, color);

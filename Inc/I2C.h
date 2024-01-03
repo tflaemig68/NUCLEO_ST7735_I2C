@@ -21,13 +21,13 @@ extern void i2c_activate_pb89(I2C_TypeDef *i2c);
 #define i2cAddr_RFID	0x50
 
 extern void RFID_LED(I2C_TypeDef *i2c, bool LEDon);
-extern int8_t RFID_readCard(I2C_TypeDef *i2c, uint8_t* CardID);
-extern int8_t RFID_readFWVersion(I2C_TypeDef *i2c, uint8_t* strFirmware);
+extern int8_t RFID_readCard(I2C_TypeDef *i2c, char *CardID);
+extern int8_t RFID_readFWVersion(I2C_TypeDef *i2c, char *strFirmware);
 
 #define i2cAddr_LIS3DH 0x18
-extern int8_t LIS3DH_init(I2C_TypeDef *i2c);
-extern int16_t LIS3DH_Temp(I2C_TypeDef *i2c);
-extern int16_t LIS3DH_XYZ(I2C_TypeDef *i2c, int16_t *xyz);
+extern int8_t i2cLIS3DH_init(I2C_TypeDef *i2c, int8_t restart);
+extern int8_t i2cLIS3DH_Temp(I2C_TypeDef *i2c);
+extern int16_t i2cLIS3DH_XYZ(I2C_TypeDef *i2c, int16_t *xyz);
 
 #define i2cAddr_LIDAR	0x29
 

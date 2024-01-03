@@ -18,19 +18,11 @@
 #include "hw_config.h"
 #include "ST7735.h"
 #include "I2C.h"
-#include "tux_50_ad.h"
+#include "xyzScope.h"
 
 
 bool timerTrigger = false;
 
-
-
-/* uncommend the next line if Graphictestroutine not used */
-//#define GrafikTests 21
-
-#ifdef GrafikTests
-	unsigned int testcount = GrafikTests;
-#endif
 
 // Declaration  Timer1 = Main Prog
 // 				ST7725_Timer delay Counter
@@ -55,19 +47,21 @@ int main(void)
 	uint8_t        scanAddr = 0x7F;  //7Bit Adresse
 	I2C_TypeDef   *i2c  = I2C1;
 
-	uint32_t   I2CTaskTime = 20UL;
+	uint32_t   i2cTaskTime = 50UL;
 
 /*  End I2C Variables  */
 
-	//char strOut[] =      ". . . . . . . .\0";
+	char strCardID[]   = ".  .  .  .  .  .  .\0";
 	char strFirmware[] = ". . .          \0";  // dummyString with NULL
+
+
 	char strX[8],strY[8],strZ[8], strT[8];
-	int16_t Temp;
-	int16_t XYZ[3];
-	float X,Y,Z;
+	int8_t Temp;
+	int16_t XYZraw[3];
+	float XYZ[3], AlphaBeta[2];
 
 	static uint8_t testmode = 1;
-
+	uint16_t timeTMode5;
 
 	//int testmode = 1;
    	//unsigned int r = 0;
@@ -82,20 +76,20 @@ int main(void)
     systickInit(SYSTICK_1MS);
 
     systickSetMillis(&Timer1, 100);
-    systickSetMillis(&I2C_Timer, I2CTaskTime);
+    systickSetMillis(&I2C_Timer, i2cTaskTime);
     //lcd7735_initR(0);
-    lcd7735_setup();
     LED_red_on;
-    lcd7735_initR(INITR_REDTAB);
+
+    lcd7735_setup();
+      lcd7735_initR(INITR_REDTAB);
     lcd7735_setRotation(LANDSCAPE);
-    //lcd7735_init_screen((uint8_t *)&SmallFont[0],ST7735_GREEN,ST7735_BLACK,LANDSCAPE); // not OK
     lcd7735_setFont((uint8_t *)&SmallFont[0]);
-    LED_red_off;
     lcd7735_fillScreen(ST7735_BLACK);
-    //lcd7735_cursor_set(0,0);
-    //i2cResetDevice(i2c);
+
+    LED_red_off;
+
     i2c_activate_pb89(i2c);
-    i2cSetRiseTime(i2c, 17);
+
     lcd7735_print((char *)"I2C Scanner running \0",0,0,0);
 
 
@@ -108,18 +102,25 @@ int main(void)
 
 	   if (isSystickExpired(I2C_Timer))
 	   {
-		   systickSetTicktime(&I2C_Timer, I2CTaskTime);
+		   systickSetTicktime(&I2C_Timer, i2cTaskTime);
 		   LED_green_off;
 
 
 		   switch (testmode)
 		   {
+		   	   case 0:  //I2C Scan
+		   	   {
+		   		   //lcd7735_setForeground(ST7735_YELLOW);
+		   		   i2cSetClkSpd(i2c,  I2C_CLOCK_50);
+		   		   lcd7735_print((char *)".  .  .  .  . \0",66,14,0);
+		   		   testmode  = 1;
+		   	   }
 		   	   case 1:  //I2C Scan
 		   	   {
-		   		   LED_green_on;
+		   		   LED_red_on;
 		   		   if ( I2C_SCAN(scanAddr) != 0)
 				   {
-					   LED_green_off;
+					   LED_red_off;
 					   switch (scanAddr)
 					   {
 						   case i2cAddr_RFID:
@@ -139,6 +140,7 @@ int main(void)
 						   {
 							   enableLIS3DH = true;
 							   lcd7735_print((char *)"LIS3DH connected \0",0,28,0);
+
 							   lcd7735_print((char *)"Temp:\0",0,40,0);
 							   lcd7735_print((char *)"X:\0",0,50,0);
 							   lcd7735_print((char *)"Y:\0",0,60,0);
@@ -152,33 +154,31 @@ int main(void)
 				   if ((scanAddr == 0) && (enableRFID))
 				   {
 					   scanAddr = 0x7F;
-					   I2CTaskTime = 100UL;
+					   i2cTaskTime = 200UL;
+					   		// SL018 only works with 100kHz
 					   testmode = 2;
 				   }
 				   if ((scanAddr == 0) && (enableLIS3DH))
 				   {
 					   scanAddr = 0x7F;
-					   testmode = 3;
-					   I2CTaskTime = 200UL;
-					   LIS3DH_init(i2c);
+					   testmode = 4;
+					   i2cTaskTime = 200;
+
 				   }
 				   if ((scanAddr == 0))
 				   {
 					   scanAddr = 0x7F;
-				       testmode = 4;
+				       testmode = 0;
 				   }
 				   else
 				   {
 					   scanAddr -=1;
 				   }
-
 				   break;
 				}
-		   	   	case 2:  // read RFID
+		   	   	case 2:  // read RFID Firmware
 				{
-					// RFID_readCard(i2c, CardID);
-
-					if (RFID_readFWVersion(i2c, strFirmware) >= 0)
+					if (RFID_readFWVersion(i2c, (char *)strFirmware) >= 0)
 					{
 						lcd7735_print((char *)"FW: \0",0,48,0);
 						lcd7735_print((char *)strFirmware,24,48,0);
@@ -189,55 +189,84 @@ int main(void)
 					{
 						;
 					}
-					break;
 				}
-		   		case 3:  // read LIS3DH Data
+				break;
+		   	   	case 3:  // read RFID ID
 		   		{
-		   			//lcd7735_print((char *)"ID:\0",0,70,0);
+		   			if (RFID_readCard(i2c, strCardID)> 0)
+		   			{
+		   				lcd7735_print((char *)strCardID,24,70,0);
+		   			}
+		   		}
+		   		break;
+
+// LIS3DH function
+		   	 	case 4:  // LIS3DH Init		   			   		{
+		   	 	{
+		   			LED_red_off;
+		   	 		int8_t ret = i2cLIS3DH_init(i2c, 0);
+					if (ret > 0)										// no LIS3DH Sensor present
+					{
+						lcd7735_print("LIS3DH not Present ",0,0,0);
+						i2cTaskTime = 500;
+						testmode = 1;
+					}
+					if (ret == 0)										// LIS3DH init-procedure finished
+					{
+						lcd7735_print("(C)23Fl I2C LIS3DH ",0,0,0);
+						i2cTaskTime = 70;									// Tasktime for display 70ms
+						testmode = 5;
+						timeTMode5 = 10;							// count of cycles in Mode5
+					}
+				}
+				break;
+		   		case 5:  // read LIS3DH Data
+		   		{
 		   			LED_blue_on;
 
-		   			Temp = LIS3DH_Temp(i2c);
-		   			sprintf(strT, "%6i", Temp);
+		   			Temp = i2cLIS3DH_Temp(i2c);
+		   			sprintf(strT, "%+3i", Temp);
 		   			lcd7735_print((char *)strT,40,40,0);
 
-		   			Temp = LIS3DH_XYZ(i2c, XYZ);
-  					X = (float) XYZ[0]/0x3FFF;  //skalierung 1mg/digit at +-2g
-		   			Y = (float) XYZ[1]/0x3FFF;
-		   			Z = (float) XYZ[2]/0x3FFF;
-		   			sprintf(strX, "%+6.3f", X);
+		   			i2cLIS3DH_XYZ(i2c,(int16_t *) XYZraw);
+  					XYZ[0] = (float) XYZraw[0]/0x3FFF;  //skalierung 1mg/digit at +-2g
+		   			XYZ[1] = (float) XYZraw[1]/0x3FFF;
+		   			XYZ[2] = (float) XYZraw[2]/0x3FFF;
+		   			sprintf(strX, "%+6.3f", XYZ[0]);
 		   			lcd7735_print((char *)strX,20,50,0);
-		   			sprintf(strY, "%+6.3f", Y);
+		   			sprintf(strY, "%+6.3f", XYZ[1]);
 		   			lcd7735_print((char *)strY,20,60,0);
-		   			sprintf(strZ, "%+6.3f", Z);
+		   			sprintf(strZ, "%+6.3f", XYZ[2]);
 		   			lcd7735_print((char *)strZ,20,70,0);
-						//testmode = 2;
-		   			LED_blue_off;
+					if ((timeTMode5--) > 0)
+					{
+						testmode = 6;
+						lcd7735_fillScreen(ST7735_BLACK);
+						lcd7735_print("T:    LIS3DH (C)23Fl",0,0,0);
+						i2cTaskTime = 20;
+						LED_blue_off;
 
-
-#ifdef GrafikTests
-					testmode = 4;
-#endif
+					}
 				    break;
 				}
-#ifdef GrafikTests
-		   	    case 4:
+		   		case 6:  // Scope display the LIS3DH Data
 				{
-					test_graphics();
-				break;
-				}
-		   	    case 5:
-				{
-				    if (r++ > 360)
+					i2cLIS3DH_XYZ(i2c, XYZraw);
+					XYZ2AlphaBeta(XYZraw, AlphaBeta);
+					if (AlBeScreen(AlphaBeta) == 0)
 					{
-					   r = 0;
+						Temp = i2cLIS3DH_Temp(i2c);
+						sprintf(strT, "%+3i", Temp);
+						lcd7735_print((char *)strT,12,0,0);
 					}
-					lcd7735_print("Rotation",80,40,r);
-				break;
+					//testmode = 2;
+					break;
 				}
-#endif
+
+//end LIS3DH function
 		   	   default:
 				{
-					testmode = 1;
+					testmode = 0;
 				}
 		   }  //end switch (testmode)
 	   } // end if systickexp
@@ -245,109 +274,25 @@ int main(void)
     return 0;
 }
 
-#ifdef GrafikTests
-    void test_graphics(void)
-    {
-   	switch (testcount--)
-    	{
-   		case 21:
-   		{
-   			lcd7735_setRotation(LANDSCAPE);
-   			lcd7735_setFont((uint8_t *)&SmallFont[0]);
-   			lcd7735_print("Hi the 1st output",0,0,0);
-   		break;
-   		}
-   		case 20:
-		{
-			lcd7735_setFont((uint8_t *)&BigFont[0]);
-			lcd7735_print("BigFont",0,20,0);
-		break;
-		}
-   		case 19:
-   		{
-   			lcd7735_setFont((uint8_t *)&SevenSegNumFont[0]);
-   			lcd7735_print("01234",0,60,0);
-   		break;
-   		}
-   		case 18:
-   		{
-   			lcd7735_setFont((uint8_t *)&BigFont[0]);
-   			lcd7735_fillScreen(ST7735_MAGENTA);
-   			lcd7735_print("Hello!",20,10,0);
-   		break;
-   		}
-    	case 17:	lcd7735_print("37deg Hello!",10,5,37);break;
-    	case 16:	lcd7735_drawBitmap(0,0,50,52,(bitmapdatatype)tux_50_ad,1);break;
-    	case 15:	lcd7735_drawBitmap(55,0,50,52,(bitmapdatatype)tux_50_ad,2);break;
-    	case 14:
-    	{
-    		lcd7735_setRotation(PORTRAIT);
-    		lcd7735_drawBitmap(0,0,50,52,(bitmapdatatype)tux_50_ad,1);
-    	break;
-    	}
-    	case 13:	lcd7735_invertDisplay(INVERT_ON);break;
-    	case 12:	lcd7735_invertDisplay(INVERT_OFF);break;
-    	case 11:	lcd7735_fillScreen(ST7735_RED);break;
-    	case 10:	lcd7735_fillScreen(ST7735_GREEN);break;
-    	case  9:	lcd7735_fillScreen(ST7735_BLUE);break;
-    	case  8:	lcd7735_fillScreen(ST7735_BLACK);break;
-    	case  7:	lcd7735_fillRect(20,15,40,35,ST7735_BLUE);break;
-    	case  6:	lcd7735_fillCircle(70,70,30,ST7735_YELLOW);break;
-    	case  5:	lcd7735_drawRect(10,20,90,100,ST7735_MAGENTA);break;
-    	case  4:	lcd7735_drawCircle(60,120,35,ST7735_CYAN);break;
-    	case  3:	lcd7735_drawFastLine(10,5,110,120,ST7735_WHITE);break;
-    	case  2:	lcd7735_invertDisplay(INVERT_ON);break;
-        case  1:	lcd7735_invertDisplay(INVERT_OFF);break;
-        	default:
-        	{
-        		testcount = GrafikTests;
-        		lcd7735_fillScreen(ST7735_BLACK);
-        		break;
-        	}
-    	}
-    }
-
-/* does not work
+/* scanAdr. 7Bit Adresse value
+ * return	0 if no device found on scanAdr
+ *			if yes  return the scanAdr.
+ *			and display on the ST7735 Display
  *
  *
  */
-    void test_ascii_screen(void)
-    {
-    	unsigned char x;
-    	int i;
 
-    	//lcd7735_init_screen((void *)&SmallFont[0],ST7735_GREEN,ST7735_BLACK,PORTRAIT);
-      	lcd7735_fillScreen(ST7735_BLACK);
-      	//cursor_init();
-    	//printf("zz=%03.4f\n",34.678);
-    	//while(1) {
-    		x = 0x20;
-    		for(i=0;i<95;i++)
-    		{
-    			lcd7735_putc(x+i);
-    			delay_ms(50);
-    		}
-    		//if( UserButtonPressed == 0x01 )	return;
-    }
 
-#endif
 
 uint8_t I2C_SCAN(uint8_t scanAddr)
 {
-	I2C_TypeDef   *i2c  = I2C1;
-	//uint8_t 	*outString;
+	I2C_TypeDef *i2c  = I2C1;
 	uint8_t 	*outString2 = (uint8_t *) "Addr at: \0";
 	uint8_t     *result;
 
 	uint8_t foundAddr = 0;
 	static int xPos = 0;
-	//static int testrun = 0;
 
-
-
-	// ! Scan on read/odd Adress keep SDA at Low -
-	// I2C Interface will stopped
-	// use only write/even adresse
 	foundAddr = i2cFindSlaveAddr(i2c, scanAddr);
 	if (xPos == 0)
 	{

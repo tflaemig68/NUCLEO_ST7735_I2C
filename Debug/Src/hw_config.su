@@ -1,0 +1,6 @@
+../Src/hw_config.c:16:6:delay_ms	16	static
+../Src/hw_config.c:26:6:lcd7735_senddata	16	static
+../Src/hw_config.c:33:6:lcd7735_senddata16	16	static
+../Src/hw_config.c:39:6:lcd7735_sendCmd	16	static
+../Src/hw_config.c:46:6:lcd7735_sendData	16	static
+../Src/hw_config.c:53:6:lcd7735_setup	24	static
